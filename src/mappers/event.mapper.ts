@@ -25,7 +25,6 @@ export default class EventMapper {
       location,
       start_date: new Date(start_date),
       end_date: new Date(end_date),
-      comments: [],
       private: false,
       deadline_to_pay: deadline_to_pay ? new Date(deadline_to_pay) : new Date(),
     };
