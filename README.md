@@ -1,4 +1,4 @@
-# ceibo-back
+# the-event-network-api
 
 API Documentation:  
 http://localhost:(port_number)/api-doc/
