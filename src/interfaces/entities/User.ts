@@ -17,6 +17,7 @@ export default interface IUser {
   new_user: boolean;
   friends: IUser[];
   events: IEvent[];
+  createdEvents: IEvent[];
   rating?: number;
   validatePassword(password: string): Promise<boolean>;
   save: () => {};

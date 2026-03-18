@@ -27,21 +27,33 @@ export default class SeederService {
     this.ratingRepository = dependencies.ratingRepository;
   }
   async generateData() {
-    for (let i = 0; i < data.users.length; i++) {
-      const newUser = await this.userRepository.createOne({
-        username: data.users[i].username,
-        password: data.users[i].password,
-        email: data.users[i].email,
-        first_name: data.users[i].first_name,
-        last_name: data.users[i].last_name,
-        birthdate: new Date(data.users[i].birthdate),
-        address: data.users[i].address,
-      });
-      console.log(`User ${newUser.username} created`);
-    }
-
     for (let i = 0; i < data.categories.length; i++) {
       await this.categoryRepository.createOne({ name: data.categories[i] });
+    }
+
+    for (let i = 0; i < data.users.length; i++) {
+      const userData = data.users[i] as typeof data.users[0] & { preferences?: string[] };
+      const newUser = await this.userRepository.createOne({
+        username: userData.username,
+        password: userData.password,
+        email: userData.email,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        birthdate: new Date(userData.birthdate),
+        address: userData.address,
+      });
+      console.log(`User ${newUser.username} created`);
+
+      if (userData.preferences?.length) {
+        const categories = await Promise.all(
+          userData.preferences.map((name) => this.categoryRepository.findOne(name))
+        );
+        const categoryIds = categories
+          .filter((c) => c !== null)
+          .map((c) => c!._id.toString());
+        await this.userRepository.addPreferences(newUser._id, categoryIds);
+        console.log(`Preferences set for ${newUser.username}`);
+      }
     }
 
     for (let i = 0; i < data.events.length; i++) {
@@ -66,6 +78,7 @@ export default class SeederService {
         private: false,
         createdBy,
       });
+      await this.userRepository.addCreatedEvent(createdBy._id, event._id);
       console.log(`Event ${event.title} created`);
     }
 
@@ -79,7 +92,7 @@ export default class SeederService {
       });
       if (!event) throw new Error("Event not found");
       await this.eventRepository.addUser(user._id, event._id);
-      await this.userRepository.addEvent(event._id, user._id);
+      await this.userRepository.addEvent(user._id, event._id);
     }
 
     for (let i = 0; i < data.comments.length; i++) {
@@ -106,16 +119,17 @@ export default class SeederService {
         username: data.ratings[i].ratedBy,
       });
       if (!ratedBy) throw new Error("User not found");
-      const ratedEvent = await this.eventRepository.findOne({
-        title: data.ratings[i].ratedEvent,
+      const event = await this.eventRepository.findOne({
+        title: data.ratings[i].event,
       });
-      if (!ratedEvent) throw new Error("Event not found");
-      await this.ratingRepository.createOne({
+      if (!event) throw new Error("Event not found");
+      const rating = await this.ratingRepository.createOne({
         ratedBy,
-        ratedEvent,
-        ratedUser: ratedEvent.createdBy,
+        event,
+        ratedUser: event.createdBy,
         rating: data.ratings[i].rating,
       });
+      if (rating._id) await this.eventRepository.addRating(event._id, rating._id);
     }
 
     console.log("Fake data created");

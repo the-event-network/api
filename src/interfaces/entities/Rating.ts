@@ -4,7 +4,7 @@ import IUser from "./User";
 export default interface IRating {
   _id?: string;
   ratedBy: IUser;
-  ratedEvent: IEvent;
+  event: IEvent;
   ratedUser: IUser;
   rating: number;
 }

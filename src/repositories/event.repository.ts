@@ -184,25 +184,23 @@ export default class EventRepository {
 
   async findOneById(id: string): Promise<IEvent | null> {
     const event = await Event.findById(id).populate([
-      {
-        path: "createdBy",
-        model: "User",
-      },
+      { path: "createdBy", model: "User" },
       {
         path: "comments",
         model: "Comment",
-        populate: {
-          path: "user",
-          model: "User",
-          select: "_id, username",
-        },
+        populate: { path: "user", model: "User", select: "_id, username" },
       },
-      {
-        path: "category",
-        model: "Category",
-      },
+      { path: "category", model: "Category" },
+      { path: "ratings", model: "Rating" },
     ]);
     return event;
+  }
+
+  async addRating(eventId: string, ratingId: string): Promise<void> {
+    await Event.findByIdAndUpdate(
+      eventId,
+      { $addToSet: { ratings: new Types.ObjectId(ratingId) } }
+    );
   }
 
   async createOne(eventData: Partial<IEvent>): Promise<IEvent> {

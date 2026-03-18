@@ -33,6 +33,14 @@ export default class UserRepository {
     );
   }
 
+  async addCreatedEvent(userId: string, eventId: string): Promise<IUser | null> {
+    return await User.findOneAndUpdate(
+      { _id: new Types.ObjectId(userId) },
+      { $addToSet: { createdEvents: new Types.ObjectId(eventId) } },
+      { new: true }
+    );
+  }
+
   async addPreferences(userId: string, categoryIds: string[]) {
     await User.updateOne(
       { _id: new Types.ObjectId(userId) },
@@ -194,27 +202,19 @@ export default class UserRepository {
 
   async findOne(query: UserOptions): Promise<IUser | null> {
     return await User.findOne(query, "-password -salt -__v").populate([
-      {
-        path: "preferences",
-        model: "Category",
-      },
-      {
-        path: "friends",
-        model: "User",
-      },
+      { path: "preferences", model: "Category" },
+      { path: "friends", model: "User" },
+      { path: "events", model: "Event" },
+      { path: "createdEvents", model: "Event" },
     ]);
   }
 
   async findOneById(userId: string): Promise<IUser | null> {
     return await User.findById(userId, "-password -salt -__v").populate([
-      {
-        path: "preferences",
-        model: "Category",
-      },
-      {
-        path: "friends",
-        model: "User",
-      },
+      { path: "preferences", model: "Category" },
+      { path: "friends", model: "User" },
+      { path: "events", model: "Event" },
+      { path: "createdEvents", model: "Event" },
     ]);
   }
 }

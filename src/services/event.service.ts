@@ -45,21 +45,19 @@ export default class EventService {
   }
 
   async rateEvent(ratedBy: IUser, eventId: string, rating: number) {
-    const ratedEvent = await this.eventRepository.findOneById(eventId);
-    if (!ratedEvent) throw new HttpError(404, "Event not found");
-    const ratedUser = ratedEvent.createdBy;
+    const event = await this.eventRepository.findOneById(eventId);
+    if (!event) throw new HttpError(404, "Event not found");
 
-    await this.ratingRepository.createOne({
-      ratedEvent,
-      ratedUser,
-      rating,
-      ratedBy,
-    });
+    const savedRating = await this.ratingRepository.upsertOne(
+      { ratedBy: ratedBy._id, event: eventId },
+      { rating, ratedUser: event.createdBy, event }
+    );
+    if (savedRating._id) await this.eventRepository.addRating(eventId, savedRating._id);
   }
 
-  async userRating(user: IUser) {
-    if (!user) throw new HttpError(404, "User not found");
-    return user.rating;
+  async getUserRatingForEvent(userId: string, eventId: string) {
+    const rating = await this.ratingRepository.findOne({ ratedBy: userId, event: eventId });
+    return rating?.rating ?? null;
   }
 
   async stopParticipating(user: IUser, eventId: string) {
@@ -77,6 +75,7 @@ export default class EventService {
     event.category = category;
     event.createdBy = user;
     const newEvent = await this.eventRepository.createOne(event);
+    await this.userRepository.addCreatedEvent(user._id, newEvent._id);
     return newEvent;
   }
 
@@ -177,9 +176,6 @@ export default class EventService {
   async getOrganizerAvgRating(eventId: string) {
     const event = await this.eventRepository.findOneById(eventId);
     if (!event) throw new HttpError(404, "Event not found");
-    const avgRating = await this.ratingRepository.getAverage({
-      ratedUser: event.createdBy._id,
-    });
-    return avgRating;
+    return await this.ratingRepository.getAverageByOrganizer(event.createdBy._id);
   }
 }

@@ -7,7 +7,8 @@
       "last_name": "Digital",
       "email": "ceibodigital@example.com",
       "birthdate": "2024-05-30",
-      "address": "calle falsa 123"
+      "address": "calle falsa 123",
+      "preferences": ["Art & Culture", "Food & Drinks", "Party"]
     },
     {
       "username": "johndoe",
@@ -131,8 +132,8 @@
     {
       "title": "New Product Launch",
       "description": "Presentation of the company's new product with a grand party",
-      "start_date": "2024-09-15T17:00:00.000Z",
-      "end_date": "2024-09-15T18:00:00.000Z",
+      "start_date": "2027-09-15T17:00:00.000Z",
+      "end_date": "2027-09-15T18:00:00.000Z",
       "location": "Convention Center",
       "img": "https://cdn.pixabay.com/photo/2016/08/16/09/53/international-conference-1597531_1280.jpg",
       "category": "Conference",
@@ -144,8 +145,8 @@
       "location": "San José Church, Main Street 123, Pueblo Nuevo",
       "img": "https://cdn.pixabay.com/photo/2014/09/13/04/59/couple-443600_1280.jpg",
       "category": "Party",
-      "start_date": "2024-07-18T21:00:00.000Z",
-      "end_date": "2024-07-18T22:00:00.000Z",
+      "start_date": "2027-07-18T21:00:00.000Z",
+      "end_date": "2027-07-18T22:00:00.000Z",
       "createdBy": "wadewinston"
     },
     {
@@ -154,8 +155,8 @@
       "location": "Ana's House, Flores Street 456",
       "img": "https://cdn.pixabay.com/photo/2014/06/10/20/01/cake-366346_1280.jpg",
       "category": "Party",
-      "start_date": "2024-12-05T14:00:00.000Z",
-      "end_date": "2024-12-05T16:00:00.000Z",
+      "start_date": "2027-12-05T14:00:00.000Z",
+      "end_date": "2027-12-05T16:00:00.000Z",
       "createdBy": "clubDelPlan"
     },
     {
@@ -164,8 +165,8 @@
       "location": "National Stadium",
       "img": "https://cdn.pixabay.com/photo/2015/11/22/19/04/crowd-1056764_1280.jpg",
       "category": "Music",
-      "start_date": "2024-07-22T21:00:00.000Z",
-      "end_date": "2024-07-22T23:00:00.000Z",
+      "start_date": "2027-07-22T21:00:00.000Z",
+      "end_date": "2027-07-22T23:00:00.000Z",
       "createdBy": "brucewayne"
     },
     {
@@ -174,8 +175,8 @@
       "location": "Grand Plaza Reception Hall",
       "img": "https://cdn.pixabay.com/photo/2017/02/05/00/08/graduation-2038864_1280.jpg",
       "category": "Party",
-      "start_date": "2025-03-25T17:00:00.000Z",
-      "end_date": "2025-03-25T18:00:00.000Z",
+      "start_date": "2027-03-25T17:00:00.000Z",
+      "end_date": "2027-03-25T18:00:00.000Z",
       "createdBy": "superman"
     },
     {
@@ -195,8 +196,8 @@
       "img": "https://cdn.pixabay.com/photo/2018/05/04/10/08/cheese-3373604_1280.jpg",
       "category": "Food & Drinks",
       "private": true,
-      "start_date": "2024-01-30T13:00:00.000Z",
-      "end_date": "2024-01-30T15:00:00.000Z",
+      "start_date": "2027-01-30T13:00:00.000Z",
+      "end_date": "2027-01-30T15:00:00.000Z",
       "createdBy": "johndoe"
     }
   ],
@@ -204,24 +205,20 @@
     { "user": "johndoe", "event": "Birthday Party" },
     { "user": "superman", "event": "Birthday Party" },
     { "user": "aquaman", "event": "Birthday Party" },
-
     { "user": "ironman", "event": "Gastronomic Fair" },
     { "user": "wadewinston", "event": "Gastronomic Fair" },
     { "user": "brucewayne", "event": "Gastronomic Fair" },
-
     { "user": "aquaman", "event": "Graduation Party" },
     { "user": "ironman", "event": "Graduation Party" },
-
     { "user": "johndoe", "event": "Film Festival" },
     { "user": "superman", "event": "Film Festival" },
-
     { "user": "wadewinston", "event": "Rock Concert" },
-
     { "user": "ironman", "event": "Maria & Juan's Wedding" },
     { "user": "superman", "event": "Maria & Juan's Wedding" },
     { "user": "johndoe", "event": "Maria & Juan's Wedding" },
-
-    { "user": "wadewinston", "event": "New Product Launch" }
+    { "user": "wadewinston", "event": "New Product Launch" },
+    { "user": "clubDelPlan", "event": "Film Festival" },
+    { "user": "clubDelPlan", "event": "Gastronomic Fair" }
   ],
   "comments": [
     {
@@ -285,55 +282,54 @@
       "text": "Congratulations to both of you"
     }
   ],
-
   "ratings": [
     {
-      "ratedEvent": "New Product Launch",
+      "event": "New Product Launch",
       "ratedBy": "wadewinston",
       "rating": 5
     },
     {
-      "ratedEvent": "New Product Launch",
+      "event": "New Product Launch",
       "ratedBy": "wadewinston",
       "rating": 3
     },
     {
-      "ratedEvent": "Birthday Party",
+      "event": "Birthday Party",
       "ratedBy": "johndoe",
       "rating": 4
     },
     {
-      "ratedEvent": "Birthday Party",
+      "event": "Birthday Party",
       "ratedBy": "superman",
       "rating": 5
     },
     {
-      "ratedEvent": "Birthday Party",
+      "event": "Birthday Party",
       "ratedBy": "aquaman",
       "rating": 5
     },
     {
-      "ratedEvent": "Film Festival",
+      "event": "Film Festival",
       "ratedBy": "johndoe",
       "rating": 3
     },
     {
-      "ratedEvent": "Film Festival",
+      "event": "Film Festival",
       "ratedBy": "superman",
       "rating": 4
     },
     {
-      "ratedEvent": "Rock Concert",
+      "event": "Rock Concert",
       "ratedBy": "wadewinston",
       "rating": 2
     },
     {
-      "ratedEvent": "Gastronomic Fair",
+      "event": "Gastronomic Fair",
       "ratedBy": "ironman",
       "rating": 4
     },
     {
-      "ratedEvent": "Maria & Juan's Wedding",
+      "event": "Maria & Juan's Wedding",
       "ratedBy": "superman",
       "rating": 4
     }

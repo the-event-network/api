@@ -45,6 +45,7 @@ const EventSchema = new Schema<IEvent>({
     ref: "User",
   },
   comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
+  ratings: [{ type: Schema.Types.ObjectId, ref: "Rating" }],
   private: { type: Boolean, default: false },
   users: [{ type: Schema.Types.ObjectId, ref: "User" }],
 });

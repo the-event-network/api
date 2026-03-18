@@ -39,12 +39,25 @@ export default class EventController {
   }
 
   @route("/:id/rating")
+  @before([validateUser])
   @GET()
   async userRating(req: Request, res: Response) {
     try {
-      const rating = await this.eventService.getOrganizerAvgRating(
+      const rating = await this.eventService.getUserRatingForEvent(
+        req.user._id,
         req.params.id
       );
+      res.status(200).send({ rating });
+    } catch (err) {
+      return handleError(res, err);
+    }
+  }
+
+  @route("/:id/organizer-rating")
+  @GET()
+  async organizerRating(req: Request, res: Response) {
+    try {
+      const rating = await this.eventService.getOrganizerAvgRating(req.params.id);
       res.status(200).send({ rating });
     } catch (err) {
       return handleError(res, err);
@@ -208,6 +221,7 @@ export default class EventController {
   }
 
   @route("/:id/rate")
+  @before([validateUser])
   @POST()
   async rateEvent(req: Request, res: Response) {
     try {

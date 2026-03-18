@@ -72,6 +72,13 @@ const UserSchema = new Schema<IUser>({
       timestamps: true,
     },
   ],
+  createdEvents: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Event",
+      timestamps: true,
+    },
+  ],
 });
 
 UserSchema.methods.validatePassword = async function (password: string) {

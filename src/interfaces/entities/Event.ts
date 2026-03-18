@@ -1,5 +1,6 @@
 import ICategory from "./Category";
 import IComment from "./Comment";
+import IRating from "./Rating";
 import IUser from "./User";
 
 export default interface IEvent {
@@ -20,6 +21,7 @@ export default interface IEvent {
   category: ICategory;
   createdBy: IUser;
   comments: IComment[];
+  ratings: IRating[];
   private: boolean;
   ended?: boolean;
   users: IUser[];

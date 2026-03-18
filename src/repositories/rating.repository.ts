@@ -2,6 +2,7 @@ import { IRating } from "../interfaces/entities";
 import { RatingOptions } from "../interfaces/options";
 import Paginated from "../interfaces/Paginated";
 import { Rating } from "../models";
+import { Types } from "mongoose";
 
 export default class RatingRepository {
   async findOne(query: RatingOptions): Promise<IRating | null> {
@@ -9,21 +10,21 @@ export default class RatingRepository {
     return rating;
   }
 
-  async getAverage(query: RatingOptions): Promise<number> {
-    const [{ avgRating }]: { avgRating: number }[] = await Rating.aggregate([
+  async getAverageByOrganizer(organizerId: string): Promise<number | null> {
+    const result: { avgRating: number }[] = await Rating.aggregate([
       {
-        $match: query,
-      },
-      {
-        $group: {
-          _id: null,
-          avgRating: {
-            $avg: "$rating",
-          },
+        $lookup: {
+          from: "events",
+          localField: "event",
+          foreignField: "_id",
+          as: "eventDoc",
         },
       },
+      { $unwind: "$eventDoc" },
+      { $match: { "eventDoc.createdBy": new Types.ObjectId(organizerId) } },
+      { $group: { _id: null, avgRating: { $avg: "$rating" } } },
     ]);
-    return avgRating;
+    return result[0]?.avgRating ?? null;
   }
 
   async findAll(
@@ -42,6 +43,15 @@ export default class RatingRepository {
     const newRating = new Rating(category);
     await newRating.save();
     return newRating;
+  }
+
+  async upsertOne(query: RatingOptions, data: Partial<IRating>): Promise<IRating> {
+    const { rating, ...onInsertFields } = data;
+    return await Rating.findOneAndUpdate(
+      query,
+      { $set: { rating }, $setOnInsert: onInsertFields },
+      { new: true, upsert: true }
+    );
   }
 
   async removeOneById(id: string): Promise<void> {
