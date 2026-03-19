@@ -1,19 +1,8 @@
-import CategoryRepository from "./category.repository";
-import EventRepository from "./event.repository";
-import UserRepository from "./user.repository";
-import EmailRepository from "./email.repository";
-import WhatsappRepository from "./whatsapp.repository";
-import FileRepository from "./file.repository";
-import CommentRepository from "./comment.repository";
-import RatingRepository from "./rating.repository";
-
-export {
-  CategoryRepository,
-  EventRepository,
-  UserRepository,
-  EmailRepository,
-  WhatsappRepository,
-  FileRepository,
-  CommentRepository,
-  RatingRepository,
-};
+export * as categoryRepository from "./category.repository";
+export * as commentRepository from "./comment.repository";
+export * as emailRepository from "./email.repository";
+export * as eventRepository from "./event.repository";
+export * as fileRepository from "./file.repository";
+export * as ratingRepository from "./rating.repository";
+export * as userRepository from "./user.repository";
+export * as whatsappRepository from "./whatsapp.repository";

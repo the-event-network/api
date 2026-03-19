@@ -1,30 +1,15 @@
-import { CategoryMapper } from "../mappers";
-import { CategoryRepository } from "../repositories";
+import * as categoryRepository from "../repositories/category.repository";
+import * as categoryMapper from "../mappers/category.mapper";
 
-export default class CategoryService {
-  categoryRepository: CategoryRepository;
-  categoryMapper: CategoryMapper;
+export async function listCategories() {
+  return await categoryRepository.findAll();
+}
 
-  constructor(dependencies: {
-    categoryRepository: CategoryRepository;
-    categoryMapper: CategoryMapper;
-  }) {
-    this.categoryRepository = dependencies.categoryRepository;
-    this.categoryMapper = dependencies.categoryMapper;
-  }
+export async function createNewCategory(name: string) {
+  const category = categoryMapper.fromDtoToEntity({ name });
+  return await categoryRepository.createOne(category);
+}
 
-  async listCategories() {
-    const categories = await this.categoryRepository.findAll();
-    return categories;
-  }
-
-  async createNewCategory(name: string) {
-    const category = this.categoryMapper.fromDtoToEntity({ name });
-    let newCategory = await this.categoryRepository.createOne(category);
-    return newCategory;
-  }
-
-  async removeCategory(categoryId: string) {
-    await this.categoryRepository.removeOneById(categoryId);
-  }
+export async function removeCategory(categoryId: string) {
+  await categoryRepository.removeOneById(categoryId);
 }

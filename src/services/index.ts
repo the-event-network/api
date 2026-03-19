@@ -1,13 +1,5 @@
-import CategoryService from "./category.service";
-import CommentService from "./comment.service";
-import EventService from "./event.service";
-import UserService from "./user.service";
-import FileService from "./file.service";
-
-export {
-  CategoryService,
-  CommentService,
-  EventService,
-  UserService,
-  FileService,
-};
+export * as categoryService from "./category.service";
+export * as commentService from "./comment.service";
+export * as eventService from "./event.service";
+export * as fileService from "./file.service";
+export * as userService from "./user.service";

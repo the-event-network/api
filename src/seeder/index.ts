@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import container from "../container";
 import dotenv from "dotenv";
+import { generateData } from "../services/seeder.service";
 
 dotenv.config();
 
@@ -9,9 +9,7 @@ const MONGODB_URI =
 
 const dropAndSeed = async () => {
   try {
-    await mongoose.connect(MONGODB_URI, {
-      autoIndex: true,
-    });
+    await mongoose.connect(MONGODB_URI, { autoIndex: true });
 
     const collections = await mongoose.connection.db.collections();
     for (let collection of collections) {
@@ -19,8 +17,7 @@ const dropAndSeed = async () => {
     }
     console.log("All collections dropped");
 
-    const seederService = container.resolve("seederService");
-    await seederService.generateData();
+    await generateData();
     console.log("All data generated");
 
     mongoose.connection.close();

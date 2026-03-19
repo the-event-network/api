@@ -1,6 +1,4 @@
-import CategoryMapper from "./category.mapper";
-import CommentMapper from "./comment.mapper";
-import EventMapper from "./event.mapper";
-import UserMapper from "./user.mapper";
-
-export { CategoryMapper, CommentMapper, EventMapper, UserMapper };
+export * as categoryMapper from "./category.mapper";
+export * as commentMapper from "./comment.mapper";
+export * as eventMapper from "./event.mapper";
+export * as userMapper from "./user.mapper";

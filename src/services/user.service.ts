@@ -1,176 +1,138 @@
 import { generateToken, validateToken } from "../config/tokens";
 import UserDto from "../interfaces/dto/user.dto";
-import { ICategory, IUser } from "../interfaces/entities";
+import { IUser } from "../interfaces/entities";
 import HttpError from "../interfaces/HttpError";
-import { InvitationOptions } from "../interfaces/options";
-import { UserOptions } from "../interfaces/options";
-import { UserMapper } from "../mappers";
-import {
-  UserRepository,
-  WhatsappRepository,
-  EmailRepository,
-} from "../repositories";
+import { InvitationOptions, UserOptions } from "../interfaces/options";
+import * as userMapper from "../mappers/user.mapper";
+import * as userRepository from "../repositories/user.repository";
+import * as emailRepository from "../repositories/email.repository";
+import * as whatsappRepository from "../repositories/whatsapp.repository";
 
-export default class UserService {
-  private userRepository: UserRepository;
-  private emailRepository: EmailRepository;
-  private whatsappRepository: WhatsappRepository;
-  private userMapper: UserMapper;
-  constructor(dependencies: {
-    userRepository: UserRepository;
-    emailRepository: EmailRepository;
-    whatsappRepository: WhatsappRepository;
-    userMapper: UserMapper;
-  }) {
-    this.userRepository = dependencies.userRepository;
-    this.emailRepository = dependencies.emailRepository;
-    this.whatsappRepository = dependencies.whatsappRepository;
-    this.userMapper = dependencies.userMapper;
-  }
+export async function inviteUsers(data: InvitationOptions, userId: string) {
+  const usernames = data.users;
+  const eventTitle = data.plan.title;
+  const user = await userRepository.findOneById(userId);
+  if (!user) return;
 
-  async inviteUsers(data: InvitationOptions, userId: string) {
-    const usernames = data.users;
-    const eventTitle = data.plan.title;
-    const user = await this.userRepository.findOneById(userId);
-    if (!user) return;
+  const { data: invitedUsers } = await userRepository.findAll({ usernames });
+  invitedUsers.forEach(async (invitedUser) => {
+    switch (data.method) {
+      case "email":
+        await emailRepository.send({
+          email: invitedUser.email,
+          username: user.username,
+          eventId: data.plan._id,
+          eventTitle,
+        });
+        break;
+      case "phone":
+        if (!invitedUser.phone) return;
+        await whatsappRepository.send({
+          username: invitedUser.username,
+          eventTitle,
+          eventId: data.plan._id,
+          to: invitedUser.phone,
+        });
+        break;
+    }
+  });
+}
 
-    const { data: invitedUsers } = await this.userRepository.findAll({
-      usernames,
-    });
-    invitedUsers.forEach(async (invitedUser) => {
-      switch (data.method) {
-        case "email":
-          await this.emailRepository.send({
-            email: invitedUser.email,
-            username: user.username,
-            eventId: data.plan._id,
-            eventTitle,
-          });
-          break;
-        case "phone":
-          if (!invitedUser.phone) return;
-          await this.whatsappRepository.send({
-            username: invitedUser.username,
-            eventTitle,
-            eventId: data.plan._id,
-            to: invitedUser.phone,
-          });
-          break;
-      }
-    });
-  }
+export async function login(username: string, password: string) {
+  const userPayload = await userRepository.getPayload({ username });
+  if (!userPayload) throw new HttpError(401, "Invalid username or password");
 
-  async login(username: string, password: string) {
-    const userPayload = await this.userRepository.getPayload({ username });
-    if (!userPayload) throw new HttpError(401, "Invalid username or password");
+  const isValid = await userPayload.validatePassword(password);
+  if (!isValid) throw new HttpError(401, "Invalid username or password");
 
-    const isValid = await userPayload.validatePassword(password);
-    if (!isValid) throw new HttpError(401, "Invalid username or password");
+  const token = generateToken(userPayload);
+  return { token, userPayload };
+}
 
-    const token = generateToken(userPayload);
-    return { token, userPayload };
-  }
+export async function addPreferences(userId: string, categoryIds: string[]) {
+  const user = await userRepository.findOneById(userId);
+  if (!user) throw new HttpError(404, "User not found");
+  await userRepository.addPreferences(userId, categoryIds);
+  await userRepository.updateOneById(user._id, { new_user: false });
+}
 
-  async addPreferences(userId: string, categoryIds: string[]) {
-    const user = await this.userRepository.findOneById(userId);
-    if (!user) throw new HttpError(404, "User not found");
-    await this.userRepository.addPreferences(userId, categoryIds);
-    await this.userRepository.updateOneById(user._id, {
-      new_user: false,
-    });
-  }
+export async function getUser(userQuery: UserOptions): Promise<IUser> {
+  const user = await userRepository.findOne(userQuery);
+  if (!user) throw new HttpError(404, "User not found");
+  return user;
+}
 
-  async getUser(userQuery: UserOptions): Promise<IUser> {
-    const user = await this.userRepository.findOne(userQuery);
-    if (!user) throw new HttpError(404, "User not found");
-    return user;
-  }
+export async function addUser(userData: UserDto) {
+  const user = userMapper.fromDtoToEntity(userData);
+  await userRepository.createOne(user);
+}
 
-  async validateUserPassword(user: IUser, password: string) {
-    const isValid = await user.validatePassword(password);
-    return isValid;
-  }
+export async function getUsers() {
+  return await userRepository.findAll();
+}
 
-  async addUser(userData: UserDto) {
-    const user = this.userMapper.fromDtoToEntity(userData);
-    await this.userRepository.createOne(user);
-  }
+export async function getUserById(userId: string) {
+  const user = await userRepository.findOneById(userId);
+  if (!user) throw new HttpError(404, "User not found");
+  return user;
+}
 
-  async getUsers() {
-    return await this.userRepository.findAll();
-  }
+export async function updateUser(userId: string, userData: Partial<IUser>) {
+  return await userRepository.updateOneById(userId, userData);
+}
 
-  async getUserById(userId: string) {
-    const user = await this.userRepository.findOneById(userId);
-    if (!user) throw new HttpError(404, "User not found");
-    return user;
-  }
+export async function addFriend(userId: string, friendId: string) {
+  const user = await userRepository.findOneById(userId);
+  if (!user) return;
 
-  async updateUser(userId: string, userData: Partial<IUser>) {
-    const user = await this.userRepository.updateOneById(userId, userData);
-    return user;
-  }
+  const friend = await userRepository.findOneById(friendId);
+  if (!friend) return;
 
-  async addFriend(userId: string, friendId: string) {
-    const user = await this.userRepository.findOneById(userId);
-    if (!user) return;
+  const friends = user.friends;
+  const updatedUserFriends = userMapper.addUser(friends, friend);
+  const updatedFriendFriends = userMapper.addUser(friends, friend);
 
-    const friend = await this.userRepository.findOneById(friendId);
-    if (!friend) return;
+  await userRepository.updateOneById(user._id, { friends: updatedUserFriends });
+  await userRepository.updateOneById(friend._id, {
+    friends: updatedFriendFriends,
+  });
+}
 
-    const friends = user.friends;
-    const updatedUserFriends = this.userMapper.addUser(friends, friend);
-    const updatedFriendFriends = this.userMapper.addUser(friends, friend);
+export async function removeUserFriend(userId: string, friendId: string) {
+  const user = await userRepository.findOneById(userId);
+  if (!user) return;
 
-    await this.userRepository.updateOneById(user._id, {
-      friends: updatedUserFriends,
-    });
-    await this.userRepository.updateOneById(friend._id, {
-      friends: updatedFriendFriends,
-    });
-  }
+  const friend = await userRepository.findOneById(friendId);
+  if (!friend) return;
 
-  async removeUserFriend(userId: string, friendId: string) {
-    const user = await this.userRepository.findOneById(userId);
-    if (!user) return;
+  const userFriends = await getUserFriends(userId);
+  if (!userFriends) return;
 
-    const friend = await this.userRepository.findOneById(friendId);
-    if (!friend) return;
+  const friendFriends = await getUserFriends(friendId);
+  if (!friendFriends) return;
 
-    const userFriends = await this.getUserFriends(userId);
-    if (!userFriends) return;
+  const friends = user.friends;
+  const updatedUserFriends = userMapper.removeUser(friends, friend);
+  const updatedFriendFriends = userMapper.removeUser(friends, friend);
 
-    const friendFriends = await this.getUserFriends(friendId);
-    if (!friendFriends) return;
+  await userRepository.updateOneById(user._id, { friends: updatedUserFriends });
+  await userRepository.updateOneById(friend._id, {
+    friends: updatedFriendFriends,
+  });
+}
 
-    const friends = user.friends;
-    const updatedUserFriends = this.userMapper.removeUser(friends, friend);
-    const updatedFriendFriends = this.userMapper.removeUser(friends, friend);
+export async function getUserFriends(userId: string) {
+  const paginatedUsers = await userRepository.findAllFriends(userId);
+  if (!paginatedUsers) throw new HttpError(404, "User not found");
 
-    await this.userRepository.updateOneById(user._id, {
-      friends: updatedUserFriends,
-    });
+  return {
+    data: paginatedUsers.data.map(({ friends }: IUser) => friends),
+    total: paginatedUsers.total,
+  };
+}
 
-    await this.userRepository.updateOneById(friend._id, {
-      friends: updatedFriendFriends,
-    });
-  }
-
-  async getUserFriends(userId: string) {
-    const paginatedUsers = await this.userRepository.findAllFriends(userId);
-    if (!paginatedUsers) throw new HttpError(404, "User not found");
-
-    const paginatedFriends = {
-      data: paginatedUsers.data.map(({ friends }: IUser) => friends),
-      total: paginatedUsers.total,
-    };
-
-    return paginatedFriends;
-  }
-
-  async getUserPayload(token?: string) {
-    const result = validateToken(token);
-    if (typeof result === "string") throw new HttpError(401, "Unauthorized");
-    return result.payload;
-  }
+export async function getUserPayload(token?: string) {
+  const result = validateToken(token);
+  if (typeof result === "string") throw new HttpError(401, "Unauthorized");
+  return result.payload;
 }

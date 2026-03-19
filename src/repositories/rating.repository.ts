@@ -4,60 +4,59 @@ import Paginated from "../interfaces/Paginated";
 import { Rating } from "../models";
 import { Types } from "mongoose";
 
-export default class RatingRepository {
-  async findOne(query: RatingOptions): Promise<IRating | null> {
-    const rating = await Rating.findOne(query);
-    return rating;
-  }
+export async function findOne(query: RatingOptions): Promise<IRating | null> {
+  return await Rating.findOne(query);
+}
 
-  async getAverageByOrganizer(organizerId: string): Promise<number | null> {
-    const result: { avgRating: number }[] = await Rating.aggregate([
-      {
-        $lookup: {
-          from: "events",
-          localField: "event",
-          foreignField: "_id",
-          as: "eventDoc",
-        },
+export async function getAverageByOrganizer(
+  organizerId: string,
+): Promise<number | null> {
+  const result: { avgRating: number }[] = await Rating.aggregate([
+    {
+      $lookup: {
+        from: "events",
+        localField: "event",
+        foreignField: "_id",
+        as: "eventDoc",
       },
-      { $unwind: "$eventDoc" },
-      { $match: { "eventDoc.createdBy": new Types.ObjectId(organizerId) } },
-      { $group: { _id: null, avgRating: { $avg: "$rating" } } },
-    ]);
-    return result[0]?.avgRating ?? null;
-  }
+    },
+    { $unwind: "$eventDoc" },
+    { $match: { "eventDoc.createdBy": new Types.ObjectId(organizerId) } },
+    { $group: { _id: null, avgRating: { $avg: "$rating" } } },
+  ]);
+  return result[0]?.avgRating ?? null;
+}
 
-  async findAll(
-    query = {},
-    pagination = { skip: 0, limit: 20 },
-  ): Promise<Paginated<IRating>> {
-    const { skip, limit } = pagination;
-    const [data, total] = await Promise.all([
-      Rating.find(query).skip(skip).limit(limit),
-      Rating.countDocuments(query),
-    ]);
-    return { data, total };
-  }
+export async function findAll(
+  query = {},
+  pagination = { skip: 0, limit: 20 },
+): Promise<Paginated<IRating>> {
+  const { skip, limit } = pagination;
+  const [data, total] = await Promise.all([
+    Rating.find(query).skip(skip).limit(limit),
+    Rating.countDocuments(query),
+  ]);
+  return { data, total };
+}
 
-  async createOne(category: Partial<IRating>): Promise<IRating> {
-    const newRating = new Rating(category);
-    await newRating.save();
-    return newRating;
-  }
+export async function createOne(category: Partial<IRating>): Promise<IRating> {
+  const newRating = new Rating(category);
+  await newRating.save();
+  return newRating;
+}
 
-  async upsertOne(
-    query: RatingOptions,
-    data: Partial<IRating>,
-  ): Promise<IRating> {
-    const { rating, ...onInsertFields } = data;
-    return await Rating.findOneAndUpdate(
-      query,
-      { $set: { rating }, $setOnInsert: onInsertFields },
-      { new: true, upsert: true },
-    );
-  }
+export async function upsertOne(
+  query: RatingOptions,
+  data: Partial<IRating>,
+): Promise<IRating> {
+  const { rating, ...onInsertFields } = data;
+  return await Rating.findOneAndUpdate(
+    query,
+    { $set: { rating }, $setOnInsert: onInsertFields },
+    { new: true, upsert: true },
+  );
+}
 
-  async removeOneById(id: string): Promise<void> {
-    await Rating.findByIdAndRemove(id);
-  }
+export async function removeOneById(id: string): Promise<void> {
+  await Rating.findByIdAndRemove(id);
 }

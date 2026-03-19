@@ -1,14 +1,11 @@
 import { CategoryDto } from "../interfaces/dto";
 import { ICategory } from "../interfaces/entities";
 
-export default class CategoryMapper {
-  fromDtoToEntity(categoryDto: CategoryDto) {
-    const { name } = categoryDto;
-    const categoryEntity: Partial<ICategory> = { name };
-    return categoryEntity;
-  }
+export function fromDtoToEntity(categoryDto: CategoryDto): Partial<ICategory> {
+  const { name } = categoryDto;
+  return { name };
+}
 
-  fromEntitiesToArray(entities: ICategory[]) {
-    return entities.map(({ _id }: ICategory) => _id);
-  }
+export function fromEntitiesToArray(entities: ICategory[]) {
+  return entities.map(({ _id }) => _id);
 }

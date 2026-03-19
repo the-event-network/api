@@ -15,9 +15,6 @@
   "license": "ISC",
   "dependencies": {
     "@faker-js/faker": "^8.0.2",
-    "awilix": "^12.0.4",
-    "awilix-express": "^9.0.2",
-    "awilix-router-core": "^2.1.0",
     "axios": "^1.4.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.9.0",
@@ -31,6 +28,7 @@
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^8.0.3",
     "nodemon": "^3.1.14",
+    "serverless-http": "^4.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.3",
     "ts-node-dev": "^2.0.0",

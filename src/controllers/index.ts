@@ -1,13 +1,5 @@
-import CategoryController from "./category.controller";
-import EventController from "./event.controller";
-import FileController from "./file.controller";
-import UserController from "./user.controller";
-import CommentController from "./comment.controller";
-
-export {
-  CategoryController,
-  EventController,
-  FileController,
-  UserController,
-  CommentController,
-};
+export * as categoryController from "./category.controller";
+export * as commentController from "./comment.controller";
+export * as eventController from "./event.controller";
+export * as fileController from "./file.controller";
+export * as userController from "./user.controller";

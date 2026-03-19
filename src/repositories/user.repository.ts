@@ -9,215 +9,171 @@ type WhereClause = {
   email?: string;
 };
 
-export default class UserRepository {
-  async createOne(userData: Partial<IUser>): Promise<IUser> {
-    const user = new User(userData);
-    await user.validate();
-    await user.save();
-    return user;
-  }
+export async function createOne(userData: Partial<IUser>): Promise<IUser> {
+  const user = new User(userData);
+  await user.validate();
+  await user.save();
+  return user;
+}
 
-  async removeEvent(eventId: string, userId: string): Promise<IUser | null> {
-    return await User.findOneAndUpdate(
-      { _id: new Types.ObjectId(userId) },
-      { $pull: { events: new Types.ObjectId(eventId) } },
-      { new: true },
-    );
-  }
+export async function removeEvent(
+  eventId: string,
+  userId: string,
+): Promise<IUser | null> {
+  return await User.findOneAndUpdate(
+    { _id: new Types.ObjectId(userId) },
+    { $pull: { events: new Types.ObjectId(eventId) } },
+    { new: true },
+  );
+}
 
-  async addEvent(userId: string, eventId: string): Promise<IUser | null> {
-    return await User.findOneAndUpdate(
-      { _id: new Types.ObjectId(userId) },
-      { $addToSet: { events: new Types.ObjectId(eventId) } },
-      { new: true },
-    );
-  }
+export async function addEvent(
+  userId: string,
+  eventId: string,
+): Promise<IUser | null> {
+  return await User.findOneAndUpdate(
+    { _id: new Types.ObjectId(userId) },
+    { $addToSet: { events: new Types.ObjectId(eventId) } },
+    { new: true },
+  );
+}
 
-  async addCreatedEvent(
-    userId: string,
-    eventId: string,
-  ): Promise<IUser | null> {
-    return await User.findOneAndUpdate(
-      { _id: new Types.ObjectId(userId) },
-      { $addToSet: { createdEvents: new Types.ObjectId(eventId) } },
-      { new: true },
-    );
-  }
+export async function addCreatedEvent(
+  userId: string,
+  eventId: string,
+): Promise<IUser | null> {
+  return await User.findOneAndUpdate(
+    { _id: new Types.ObjectId(userId) },
+    { $addToSet: { createdEvents: new Types.ObjectId(eventId) } },
+    { new: true },
+  );
+}
 
-  async addPreferences(userId: string, categoryIds: string[]) {
-    await User.updateOne(
-      { _id: new Types.ObjectId(userId) },
-      { $set: { preferences: categoryIds } },
-    );
-  }
+export async function addPreferences(userId: string, categoryIds: string[]) {
+  await User.updateOne(
+    { _id: new Types.ObjectId(userId) },
+    { $set: { preferences: categoryIds } },
+  );
+}
 
-  async updateOneById(
-    userId: string,
-    userData: Partial<IUser>,
-  ): Promise<IUser | null> {
-    return await User.findByIdAndUpdate(userId, userData, {
-      select: "-password -salt -__v",
-    });
-  }
+export async function updateOneById(
+  userId: string,
+  userData: Partial<IUser>,
+): Promise<IUser | null> {
+  return await User.findByIdAndUpdate(userId, userData, {
+    select: "-password -salt -__v",
+  });
+}
 
-  async getPayload(query: UserOptions = {}): Promise<IUser | null> {
-    return await User.findOne(query).populate([
-      {
-        path: "preferences",
-        model: "Category",
+export async function getPayload(
+  query: UserOptions = {},
+): Promise<IUser | null> {
+  return await User.findOne(query).populate([
+    { path: "preferences", model: "Category" },
+    { path: "events", model: "Event" },
+  ]);
+}
+
+export async function findEvents(
+  userId: string,
+  options: EventOptions,
+  pagination = { skip: 0, limit: 20 },
+): Promise<Paginated<IUser>> {
+  const { maxDate } = options;
+  const { skip, limit } = pagination;
+
+  const result = await User.aggregate([
+    { $match: { _id: new Types.ObjectId(userId) } },
+    {
+      $lookup: {
+        from: "events",
+        localField: "_id",
+        foreignField: "users",
+        as: "events",
       },
-      {
-        path: "events",
-        model: "Event",
+    },
+    { $unwind: "$events" },
+    { $match: { "events.end_date": { $lt: maxDate } } },
+    { $project: { _id: 0, events: 1 } },
+    {
+      $facet: {
+        paginatedResults: [{ $skip: skip }, { $limit: limit }],
+        totalCount: [{ $count: "totalCount" }],
       },
-    ]);
-  }
+    },
+  ]);
+  const data = result[0]?.paginatedResults ?? [];
+  const total = result[0]?.totalCount[0]?.totalCount ?? 0;
+  return { data, total };
+}
 
-  async findEvents(
-    userId: string,
-    options: EventOptions,
-    pagination = { skip: 0, limit: 20 },
-  ): Promise<Paginated<IUser>> {
-    const { maxDate } = options;
-    const { skip, limit } = pagination;
+export async function findAll(
+  query: UserOptions = {},
+): Promise<Paginated<IUser>> {
+  const { username, email, usernames } = query;
 
-    const result = await User.aggregate([
-      {
-        $match: {
-          _id: new Types.ObjectId(userId),
-        },
+  const where: WhereClause = {};
+
+  if (username) where.username = username;
+  if (email) where.email = email;
+  if (usernames) where.username = { $in: usernames };
+
+  const [data, total] = await Promise.all([
+    User.find(where, "-password -salt -__v").populate({
+      path: "preferences",
+      model: "Category",
+    }),
+    User.countDocuments(where),
+  ]);
+  return { data, total };
+}
+
+export async function findAllFriends(
+  userId: string,
+  pagination = { skip: 0, limit: 20 },
+): Promise<Paginated<IUser>> {
+  const { skip, limit } = pagination;
+
+  const result = await User.aggregate([
+    { $match: { _id: new Types.ObjectId(userId) } },
+    {
+      $lookup: {
+        from: "users",
+        localField: "friends",
+        foreignField: "_id",
+        as: "friends",
       },
-      {
-        $lookup: {
-          from: "events",
-          localField: "_id",
-          foreignField: "users",
-          as: "events",
-        },
+    },
+    { $unwind: "$friends" },
+    { $project: { _id: 0, friends: 1 } },
+    {
+      $facet: {
+        paginatedResults: [{ $skip: skip }, { $limit: limit }],
+        totalCount: [{ $count: "totalCount" }],
       },
-      {
-        $unwind: "$events",
-      },
-      {
-        $match: {
-          "events.end_date": { $lt: maxDate },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          events: 1,
-        },
-      },
-      {
-        $facet: {
-          paginatedResults: [
-            {
-              $skip: skip,
-            },
-            {
-              $limit: limit,
-            },
-          ],
-          totalCount: [
-            {
-              $count: "totalCount",
-            },
-          ],
-        },
-      },
-    ]);
-    const data = result[0]?.paginatedResults ?? [];
-    const total = result[0]?.totalCount[0]?.totalCount ?? 0;
-    return { data, total };
-  }
+    },
+  ]);
 
-  async findAll(query: UserOptions = {}): Promise<Paginated<IUser>> {
-    const { username, email, usernames } = query;
+  const data = result[0]?.paginatedResults ?? [];
+  const total = result[0]?.totalCount[0]?.totalCount ?? 0;
 
-    const where: WhereClause = {};
+  return { data, total };
+}
 
-    if (username) where.username = username;
-    if (email) where.email = email;
-    if (usernames) where.username = { $in: usernames };
+export async function findOne(query: UserOptions): Promise<IUser | null> {
+  return await User.findOne(query, "-password -salt -__v").populate([
+    { path: "preferences", model: "Category" },
+    { path: "friends", model: "User" },
+    { path: "events", model: "Event" },
+    { path: "createdEvents", model: "Event" },
+  ]);
+}
 
-    const [data, total] = await Promise.all([
-      User.find(where, "-password -salt -__v").populate({
-        path: "preferences",
-        model: "Category",
-      }),
-      User.countDocuments(where),
-    ]);
-    return { data, total };
-  }
-
-  async findAllFriends(
-    userId: string,
-    pagination = { skip: 0, limit: 20 },
-  ): Promise<Paginated<IUser>> {
-    const { skip, limit } = pagination;
-
-    const result = await User.aggregate([
-      {
-        $match: { _id: new Types.ObjectId(userId) },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "friends",
-          foreignField: "_id",
-          as: "friends",
-        },
-      },
-      {
-        $unwind: "$friends",
-      },
-      {
-        $project: {
-          _id: 0,
-          friends: 1,
-        },
-      },
-      {
-        $facet: {
-          paginatedResults: [
-            {
-              $skip: skip,
-            },
-            {
-              $limit: limit,
-            },
-          ],
-          totalCount: [
-            {
-              $count: "totalCount",
-            },
-          ],
-        },
-      },
-    ]);
-
-    const data = result[0]?.paginatedResults ?? [];
-    const total = result[0]?.totalCount[0]?.totalCount ?? 0;
-
-    return { data, total };
-  }
-
-  async findOne(query: UserOptions): Promise<IUser | null> {
-    return await User.findOne(query, "-password -salt -__v").populate([
-      { path: "preferences", model: "Category" },
-      { path: "friends", model: "User" },
-      { path: "events", model: "Event" },
-      { path: "createdEvents", model: "Event" },
-    ]);
-  }
-
-  async findOneById(userId: string): Promise<IUser | null> {
-    return await User.findById(userId, "-password -salt -__v").populate([
-      { path: "preferences", model: "Category" },
-      { path: "friends", model: "User" },
-      { path: "events", model: "Event" },
-      { path: "createdEvents", model: "Event" },
-    ]);
-  }
+export async function findOneById(userId: string): Promise<IUser | null> {
+  return await User.findById(userId, "-password -salt -__v").populate([
+    { path: "preferences", model: "Category" },
+    { path: "friends", model: "User" },
+    { path: "events", model: "Event" },
+    { path: "createdEvents", model: "Event" },
+  ]);
 }
