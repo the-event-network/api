@@ -29,7 +29,7 @@ export default class RatingRepository {
 
   async findAll(
     query = {},
-    pagination = { skip: 0, limit: 20 }
+    pagination = { skip: 0, limit: 20 },
   ): Promise<Paginated<IRating>> {
     const { skip, limit } = pagination;
     const [data, total] = await Promise.all([
@@ -45,12 +45,15 @@ export default class RatingRepository {
     return newRating;
   }
 
-  async upsertOne(query: RatingOptions, data: Partial<IRating>): Promise<IRating> {
+  async upsertOne(
+    query: RatingOptions,
+    data: Partial<IRating>,
+  ): Promise<IRating> {
     const { rating, ...onInsertFields } = data;
     return await Rating.findOneAndUpdate(
       query,
       { $set: { rating }, $setOnInsert: onInsertFields },
-      { new: true, upsert: true }
+      { new: true, upsert: true },
     );
   }
 

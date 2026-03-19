@@ -31,7 +31,7 @@ export default class EventRepository {
     return await Event.findOneAndUpdate(
       { _id: new Types.ObjectId(eventId) },
       { $pull: { users: new Types.ObjectId(userId) } },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -39,13 +39,13 @@ export default class EventRepository {
     return await Event.findOneAndUpdate(
       { _id: new Types.ObjectId(eventId) },
       { $addToSet: { users: new Types.ObjectId(userId) } },
-      { new: true }
+      { new: true },
     );
   }
 
   async findByUsername(
     searchTerm: string,
-    pagination = { skip: 0, limit: 20 }
+    pagination = { skip: 0, limit: 20 },
   ) {
     const { skip, limit } = pagination;
     const result = await Event.aggregate([
@@ -90,7 +90,7 @@ export default class EventRepository {
 
   async findByCategory(
     searchTerm: string,
-    pagination = { skip: 0, limit: 20 }
+    pagination = { skip: 0, limit: 20 },
   ) {
     const { skip, limit } = pagination;
     const result = await Event.aggregate([
@@ -132,7 +132,7 @@ export default class EventRepository {
 
   async findAll(
     query: EventOptions = {},
-    pagination = { skip: 0, limit: 20 }
+    pagination = { skip: 0, limit: 20 },
   ): Promise<Paginated<IEvent>> {
     const where: WhereClause = {};
     const {
@@ -197,10 +197,9 @@ export default class EventRepository {
   }
 
   async addRating(eventId: string, ratingId: string): Promise<void> {
-    await Event.findByIdAndUpdate(
-      eventId,
-      { $addToSet: { ratings: new Types.ObjectId(ratingId) } }
-    );
+    await Event.findByIdAndUpdate(eventId, {
+      $addToSet: { ratings: new Types.ObjectId(ratingId) },
+    });
   }
 
   async createOne(eventData: Partial<IEvent>): Promise<IEvent> {

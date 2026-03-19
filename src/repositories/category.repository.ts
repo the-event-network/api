@@ -10,7 +10,7 @@ export default class CategoryRepository {
 
   async findAll(
     query = {},
-    pagination = { skip: 0, limit: 20 }
+    pagination = { skip: 0, limit: 20 },
   ): Promise<Paginated<ICategory>> {
     const { skip, limit } = pagination;
     const [data, total] = await Promise.all([

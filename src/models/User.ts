@@ -109,7 +109,7 @@ UserSchema.post<IUser>(
     };
     const message = messages[field] || "An error occurred";
     return next(new Error(message));
-  }
+  },
 );
 
 export default model<IUser>("User", UserSchema);

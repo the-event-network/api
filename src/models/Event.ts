@@ -63,7 +63,7 @@ EventSchema.post(
   function (error: Error, _: IUser, next: (err?: Error) => void) {
     if (error.name !== "MongoServerError") return next(error);
     return next(new Error("Event already exists"));
-  }
+  },
 );
 
 export default model<IEvent>("Event", EventSchema);

@@ -50,13 +50,17 @@ export default class EventService {
 
     const savedRating = await this.ratingRepository.upsertOne(
       { ratedBy: ratedBy._id, event: eventId },
-      { rating, ratedUser: event.createdBy, event }
+      { rating, ratedUser: event.createdBy, event },
     );
-    if (savedRating._id) await this.eventRepository.addRating(eventId, savedRating._id);
+    if (savedRating._id)
+      await this.eventRepository.addRating(eventId, savedRating._id);
   }
 
   async getUserRatingForEvent(userId: string, eventId: string) {
-    const rating = await this.ratingRepository.findOne({ ratedBy: userId, event: eventId });
+    const rating = await this.ratingRepository.findOne({
+      ratedBy: userId,
+      event: eventId,
+    });
     return rating?.rating ?? null;
   }
 
@@ -159,7 +163,7 @@ export default class EventService {
     const event = this.eventMapper.fromDtoToEntity(updatedData);
     if (updatedData.category) {
       const category = await this.categoryRepository.findOne(
-        updatedData.category
+        updatedData.category,
       );
       if (!category) throw new HttpError(404, "Category not found");
       event.category = category;
@@ -176,6 +180,8 @@ export default class EventService {
   async getOrganizerAvgRating(eventId: string) {
     const event = await this.eventRepository.findOneById(eventId);
     if (!event) throw new HttpError(404, "Event not found");
-    return await this.ratingRepository.getAverageByOrganizer(event.createdBy._id);
+    return await this.ratingRepository.getAverageByOrganizer(
+      event.createdBy._id,
+    );
   }
 }

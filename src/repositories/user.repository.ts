@@ -21,7 +21,7 @@ export default class UserRepository {
     return await User.findOneAndUpdate(
       { _id: new Types.ObjectId(userId) },
       { $pull: { events: new Types.ObjectId(eventId) } },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -29,28 +29,31 @@ export default class UserRepository {
     return await User.findOneAndUpdate(
       { _id: new Types.ObjectId(userId) },
       { $addToSet: { events: new Types.ObjectId(eventId) } },
-      { new: true }
+      { new: true },
     );
   }
 
-  async addCreatedEvent(userId: string, eventId: string): Promise<IUser | null> {
+  async addCreatedEvent(
+    userId: string,
+    eventId: string,
+  ): Promise<IUser | null> {
     return await User.findOneAndUpdate(
       { _id: new Types.ObjectId(userId) },
       { $addToSet: { createdEvents: new Types.ObjectId(eventId) } },
-      { new: true }
+      { new: true },
     );
   }
 
   async addPreferences(userId: string, categoryIds: string[]) {
     await User.updateOne(
       { _id: new Types.ObjectId(userId) },
-      { $set: { preferences: categoryIds } }
+      { $set: { preferences: categoryIds } },
     );
   }
 
   async updateOneById(
     userId: string,
-    userData: Partial<IUser>
+    userData: Partial<IUser>,
   ): Promise<IUser | null> {
     return await User.findByIdAndUpdate(userId, userData, {
       select: "-password -salt -__v",
@@ -73,7 +76,7 @@ export default class UserRepository {
   async findEvents(
     userId: string,
     options: EventOptions,
-    pagination = { skip: 0, limit: 20 }
+    pagination = { skip: 0, limit: 20 },
   ): Promise<Paginated<IUser>> {
     const { maxDate } = options;
     const { skip, limit } = pagination;
@@ -150,7 +153,7 @@ export default class UserRepository {
 
   async findAllFriends(
     userId: string,
-    pagination = { skip: 0, limit: 20 }
+    pagination = { skip: 0, limit: 20 },
   ): Promise<Paginated<IUser>> {
     const { skip, limit } = pagination;
 

@@ -19,7 +19,7 @@ export default class CommentController {
       const comment = await this.commentService.addComment(
         req.params.id,
         req.user._id,
-        req.body.text
+        req.body.text,
       );
       res.status(200).send(comment);
     } catch (err) {

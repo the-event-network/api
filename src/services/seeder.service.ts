@@ -32,7 +32,9 @@ export default class SeederService {
     }
 
     for (let i = 0; i < data.users.length; i++) {
-      const userData = data.users[i] as typeof data.users[0] & { preferences?: string[] };
+      const userData = data.users[i] as (typeof data.users)[0] & {
+        preferences?: string[];
+      };
       const newUser = await this.userRepository.createOne({
         username: userData.username,
         password: userData.password,
@@ -46,7 +48,9 @@ export default class SeederService {
 
       if (userData.preferences?.length) {
         const categories = await Promise.all(
-          userData.preferences.map((name) => this.categoryRepository.findOne(name))
+          userData.preferences.map((name) =>
+            this.categoryRepository.findOne(name),
+          ),
         );
         const categoryIds = categories
           .filter((c) => c !== null)
@@ -58,7 +62,7 @@ export default class SeederService {
 
     for (let i = 0; i < data.events.length; i++) {
       const category = await this.categoryRepository.findOne(
-        data.events[i].category
+        data.events[i].category,
       );
       if (!category) throw new Error("Category not found");
 
@@ -129,7 +133,8 @@ export default class SeederService {
         ratedUser: event.createdBy,
         rating: data.ratings[i].rating,
       });
-      if (rating._id) await this.eventRepository.addRating(event._id, rating._id);
+      if (rating._id)
+        await this.eventRepository.addRating(event._id, rating._id);
     }
 
     console.log("Fake data created");

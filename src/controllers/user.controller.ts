@@ -33,7 +33,7 @@ export default class UserController {
       const { username, password } = req.body;
       const { token, userPayload } = await this.userService.login(
         username,
-        password
+        password,
       );
       req.user = userPayload;
       return res.status(200).send({ token });

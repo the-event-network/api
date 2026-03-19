@@ -24,7 +24,7 @@ app.use(
   cors({
     origin: ORIGIN,
     credentials: true,
-  })
+  }),
 );
 app.use(cookieParser());
 app.use(loadControllers("controllers/*.{js,ts}", { cwd: __dirname }));

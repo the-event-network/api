@@ -45,7 +45,7 @@ export default class EventController {
     try {
       const rating = await this.eventService.getUserRatingForEvent(
         req.user._id,
-        req.params.id
+        req.params.id,
       );
       res.status(200).send({ rating });
     } catch (err) {
@@ -57,7 +57,9 @@ export default class EventController {
   @GET()
   async organizerRating(req: Request, res: Response) {
     try {
-      const rating = await this.eventService.getOrganizerAvgRating(req.params.id);
+      const rating = await this.eventService.getOrganizerAvgRating(
+        req.params.id,
+      );
       res.status(200).send({ rating });
     } catch (err) {
       return handleError(res, err);
@@ -83,7 +85,7 @@ export default class EventController {
     try {
       const event = await this.eventService.enroll(
         req.body.eventId,
-        req.user._id
+        req.user._id,
       );
       res.status(200).send(event);
     } catch (err) {
@@ -121,7 +123,7 @@ export default class EventController {
   async getRecommendedEvents(req: Request, res: Response) {
     try {
       const events = await this.eventService.getEventsByUserPreferences(
-        req.user._id
+        req.user._id,
       );
       res.status(200).send(events);
     } catch (error) {
@@ -196,7 +198,7 @@ export default class EventController {
     try {
       const result = await this.eventService.checkEdit(
         req.params.id,
-        req.user._id
+        req.user._id,
       );
       res.status(200).send(result);
     } catch (err) {
@@ -212,7 +214,7 @@ export default class EventController {
       await this.eventService.checkEdit(req.params.id, req.user._id);
       const updatedEvent = await this.eventService.updateEventData(
         req.params.id,
-        req.body
+        req.body,
       );
       return res.status(201).send(updatedEvent);
     } catch (err) {
@@ -228,7 +230,7 @@ export default class EventController {
       await this.eventService.rateEvent(
         req.user,
         req.params.id,
-        +req.body.rating
+        +req.body.rating,
       );
       return res.status(200).send({ message: "Se calificó el evento" });
     } catch (err) {
