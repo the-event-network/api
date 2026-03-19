@@ -33,10 +33,12 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
+        aws-region: us-east-2
 
-    - name: Deploy to Elastic Beanstalk
+    - name: Upload & Deploy to Elastic Beanstalk
       run: |
+        aws s3 cp deploy.zip s3://${{ secrets.AWS_S3_BUCKET }}/deploy.zip
+
         aws elasticbeanstalk create-application-version \
           --application-name eventnetwork-api \
           --version-label github-${GITHUB_SHA} \
