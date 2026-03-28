@@ -7,6 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import docsData from "./docs/swagger";
 import mongoose from "mongoose";
 import routes from "./routes";
+import redisClient from "./cache/client";
 
 dotenv.config();
 const app = express();
@@ -25,14 +26,15 @@ app.use(
   }),
 );
 app.use(cookieParser());
-app.use(routes);
+app.use("/api", routes);
 
 mongoose
   .connect(MONGODB_URI, {
     autoIndex: true,
   })
-  .then(() => {
+  .then(async () => {
     console.log("Connected to MongoDB");
+    await redisClient.connect();
     app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
   })
   .catch((err: unknown) => console.error(err));

@@ -8,6 +8,18 @@ import * as categoryRepository from "../repositories/category.repository";
 import * as eventRepository from "../repositories/event.repository";
 import * as ratingRepository from "../repositories/rating.repository";
 import * as userRepository from "../repositories/user.repository";
+import { getOrSet, del, delPattern } from "../cache";
+
+const EVENT_DETAIL_TTL = 300;
+const EVENT_LIST_TTL = 120;
+
+function eventDetailKey(id: string) {
+  return `events:detail:${id}`;
+}
+
+function eventListKey(options: object) {
+  return `events:list:${JSON.stringify(options)}`;
+}
 
 export async function enroll(eventId: string, userId: string) {
   const event = await eventRepository.addUser(eventId, userId);
@@ -16,6 +28,7 @@ export async function enroll(eventId: string, userId: string) {
   const user = await userRepository.addEvent(userId, eventId);
   if (!user) throw new HttpError(404, "User not found");
 
+  await del(eventDetailKey(eventId));
   return event;
 }
 
@@ -33,6 +46,8 @@ export async function rateEvent(
   );
   if (savedRating._id)
     await eventRepository.addRating(eventId, savedRating._id);
+
+  await del(eventDetailKey(eventId));
 }
 
 export async function getUserRatingForEvent(userId: string, eventId: string) {
@@ -49,6 +64,7 @@ export async function stopParticipating(user: IUser, eventId: string) {
 
   await eventRepository.removeUser(eventId, user._id);
   await userRepository.removeEvent(user._id, eventId);
+  await del(eventDetailKey(eventId));
 }
 
 export async function createNewEvent(eventData: EventDto, user: IUser) {
@@ -59,24 +75,32 @@ export async function createNewEvent(eventData: EventDto, user: IUser) {
   event.createdBy = user;
   const newEvent = await eventRepository.createOne(event);
   await userRepository.addCreatedEvent(user._id, newEvent._id);
+  await delPattern("events:list:*");
   return newEvent;
 }
 
 export async function findEventById(eventId: string) {
-  return await eventRepository.findOneById(eventId);
+  return getOrSet(eventDetailKey(eventId), EVENT_DETAIL_TTL, () =>
+    eventRepository.findOneById(eventId),
+  );
 }
 
 export async function getEvents(options: EventOptions) {
-  return await eventRepository.findAll(options);
+  return getOrSet(eventListKey(options), EVENT_LIST_TTL, () =>
+    eventRepository.findAll(options),
+  );
 }
 
 export async function getEventsByUserPreferences(userId: string) {
   const user = await userRepository.findOneById(userId);
   if (!user) throw new HttpError(404, "User not found");
 
-  return await eventRepository.findAll({
-    preferences: categoryMapper.fromEntitiesToArray(user.preferences),
-  });
+  const preferences = categoryMapper.fromEntitiesToArray(user.preferences);
+  return getOrSet(
+    eventListKey({ preferences }),
+    EVENT_LIST_TTL,
+    () => eventRepository.findAll({ preferences }),
+  );
 }
 
 export async function getEventsByCategory(query: CategoryOptions) {
@@ -85,7 +109,11 @@ export async function getEventsByCategory(query: CategoryOptions) {
   const category = await categoryRepository.findOne(query.name);
   if (!category) throw new HttpError(404, "Event not found");
 
-  return await eventRepository.findAll({ categoryId: category._id });
+  return getOrSet(
+    eventListKey({ categoryId: category._id }),
+    EVENT_LIST_TTL,
+    () => eventRepository.findAll({ categoryId: category._id }),
+  );
 }
 
 export async function getEventsByUser(user: IUser) {
@@ -94,7 +122,9 @@ export async function getEventsByUser(user: IUser) {
 
 export async function getEventsByQuery(query: EventOptions) {
   const { searchTerm } = query;
-  return await eventRepository.findAll({ searchTerm });
+  return getOrSet(eventListKey({ searchTerm }), EVENT_LIST_TTL, () =>
+    eventRepository.findAll({ searchTerm }),
+  );
 }
 
 export async function getUserEvents(userId: string) {
@@ -108,7 +138,11 @@ export async function getUserEvents(userId: string) {
 }
 
 export async function getCreatedEvents(userId: string) {
-  return await eventRepository.findAll({ createdBy: userId });
+  return getOrSet(
+    eventListKey({ createdBy: userId }),
+    EVENT_LIST_TTL,
+    () => eventRepository.findAll({ createdBy: userId }),
+  );
 }
 
 export async function removeEvent(eventId: string, user: IUser) {
@@ -126,6 +160,9 @@ export async function removeEvent(eventId: string, user: IUser) {
   await userRepository.updateOneById(user._id, {
     events: user.events.filter(({ _id }) => _id !== eventId),
   });
+
+  await del(eventDetailKey(eventId));
+  await delPattern("events:list:*");
 }
 
 export async function updateEventData(eventId: string, updatedData: EventDto) {
@@ -136,6 +173,8 @@ export async function updateEventData(eventId: string, updatedData: EventDto) {
     event.category = category;
   }
   await eventRepository.updateOneById(eventId, event);
+  await del(eventDetailKey(eventId));
+  await delPattern("events:list:*");
 }
 
 export async function checkEdit(eventId: string, userId: string) {
