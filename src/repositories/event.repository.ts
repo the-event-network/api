@@ -156,7 +156,7 @@ export async function findAll(
 
 export async function findOneById(id: string): Promise<IEvent | null> {
   return await Event.findById(id).populate([
-    { path: "createdBy", model: "User" },
+    { path: "createdBy", model: "User", select: "-password -salt -__v" },
     {
       path: "comments",
       model: "Comment",

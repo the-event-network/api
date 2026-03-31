@@ -1,4 +1,5 @@
 import express from "express";
+import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
@@ -12,6 +13,7 @@ import redisClient from "./cache/client";
 dotenv.config();
 const app = express();
 
+app.use(helmet());
 app.use("/api-doc", swaggerUi.serve, swaggerUi.setup(swaggerJSDoc(docsData)));
 app.use(express.json());
 

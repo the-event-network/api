@@ -129,7 +129,7 @@ export async function getEvent(req: Request, res: Response) {
 
 export async function deleteEvent(req: Request, res: Response) {
   try {
-    await eventService.checkEdit(req.params.id, req.user._id);
+    await eventService.enforceOwnership(req.params.id, req.user._id);
     await eventService.removeEvent(req.params.id, req.user);
     res.status(201).send("Event deleted successfully");
   } catch (err) {
@@ -148,7 +148,7 @@ export async function checkUpdate(req: Request, res: Response) {
 
 export async function updateEventData(req: Request, res: Response) {
   try {
-    await eventService.checkEdit(req.params.id, req.user._id);
+    await eventService.enforceOwnership(req.params.id, req.user._id);
     await eventService.updateEventData(req.params.id, req.body);
     return res.status(201).send("Event updated successfully");
   } catch (err) {

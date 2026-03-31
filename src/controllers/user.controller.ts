@@ -89,7 +89,7 @@ export async function addFriend(req: Request, res: Response) {
 
 export async function removeUserFriend(req: Request, res: Response) {
   try {
-    await userService.removeUserFriend(req.body.userId, req.params.id);
+    await userService.removeUserFriend(req.user._id, req.params.id);
     res.sendStatus(204);
   } catch (error) {
     res.status(400).send(error);

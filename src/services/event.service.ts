@@ -180,7 +180,12 @@ export async function updateEventData(eventId: string, updatedData: EventDto) {
 export async function checkEdit(eventId: string, userId: string) {
   const event = await eventRepository.findOneById(eventId);
   if (!event) throw new HttpError(404, "Event not found");
-  return event.createdBy._id === userId;
+  return String(event.createdBy._id) === String(userId);
+}
+
+export async function enforceOwnership(eventId: string, userId: string) {
+  const canEdit = await checkEdit(eventId, userId);
+  if (!canEdit) throw new HttpError(403, "Forbidden");
 }
 
 export async function getOrganizerAvgRating(eventId: string) {
